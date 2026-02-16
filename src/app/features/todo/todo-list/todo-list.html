@@ -1,0 +1,35 @@
+<div class="max-w-4xl mx-auto p-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-4xl font-bold text-foreground">Todo List</h1>
+        <button z-button type="button" routerLink="/todos/new" [attr.aria-label]="'Add new todo'" class="px-6 py-3">+
+            Add
+            New</button>
+    </div>
+    <div class="my-6 relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+        <input z-input type="text" placeholder="Search todos by description or category..." class="w-full pl-11" />
+    </div>
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6 p-2 bg-card rounded-lg border border-border">
+        <button z-button type="button" class="flex-1">All</button>
+        <button z-button type="button" class="flex-1" zType="ghost">Active</button>
+        <button z-button type="button" class="flex-1" zType="ghost">Completed</button>
+    </div>
+    <!--categories-->
+    <div class="flex flex-wrap items-center gap-2 mb-2">
+        <button z-button>All Categories</button>
+        @for (catagory of predefinedCategories(); track $index) {
+        @let config = getCategoryIcon(catagory);
+        <button z-button zType="ghost" [class]="config.color">
+            <z-icon [zType]="getIcon(config.icon)" size="small"></z-icon>
+            {{config.name}}
+        </button>
+        }
+    </div>
+</div>

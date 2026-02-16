@@ -1,0 +1,78 @@
+<!-- Form -->
+<form [formGroup]="todoForm"
+class="bg-[--color-surface] p-8 rounded-xl shadow-sm border-[--color-border]" (ngSubmit)="onSubmit()">
+
+    <!-- Title -->
+    <div class="space-y-2">
+        <label for="title" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Title
+        </label>
+        <input z-input id="title" type="text" placeholder="E.g., Complete project proposal"
+            class="w-full rounded-xl border-gray-300 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            formControlName="title" />
+        @if (todoForm.get('title')?.touched && todoForm.get('title')?.errors?.['required']) {
+        <p class="text-xs text-red-500 mt-1">Title is required</p>
+        }
+    </div>
+
+    <!-- Description -->
+    <div class="space-y-2">
+        <label for="description" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Description (Optional)
+        </label>
+        <textarea z-input id="description" placeholder="Add more details..."
+            class="w-full min-h-[120px] py-3 rounded-xl border-gray-300 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            formControlName="description"></textarea>
+    </div>
+
+    <!-- Category -->
+    <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Category
+        </label>
+        <z-select formControlName="category" zPlaceholder="Select category" class="w-full rounded-xl">
+            @for (cat of categories(); track cat) {
+            <z-select-item [zValue]="cat">
+                <z-icon [zType]="getIcon(cat)" zSize="sm" class="mr-2"></z-icon>
+                {{ cat | titlecase }}
+            </z-select-item>
+            }
+        </z-select>
+        @if (todoForm.get('category')?.touched && todoForm.get('category')?.errors?.['required']) {
+        <p class="text-xs text-red-500 mt-1">Category is required</p>
+        }
+    </div>
+
+    <!-- Priority -->
+    <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Priority
+        </label>
+        <z-select formControlName="priority" zPlaceholder="Select priority" class="w-full rounded-xl">
+            @for (pri of priorities(); track pri) {
+            <z-select-item [zValue]="pri" class="w-full rounded-xl">
+                <z-icon [zType]="getIcon(pri)" zSize="sm" class="mr-2"></z-icon>
+                {{ pri | titlecase }}
+            </z-select-item>
+            }
+        </z-select>
+        @if (todoForm.get('priority')?.touched && todoForm.get('priority')?.errors?.['required']) {
+        <p class="text-xs text-red-500 mt-1">Priority is required</p>
+        }
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-4 pt-6">
+
+        <button z-button class="flex-1 rounded-xl py-3 font-semibold shadow-md hover:shadow-lg transition"
+            (click)="saveTodo()" [disabled]="todoForm.invalid && todoForm.touched">
+            Create Todo
+        </button>
+
+        <button z-button zType="outline" class="flex-1 rounded-xl py-3 font-semibold transition" (click)="goBack()">
+            Cancel
+        </button>
+
+    </div>
+
+</form>
