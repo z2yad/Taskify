@@ -9,6 +9,7 @@ import {
   computed,
   contentChildren,
   DestroyRef,
+  effect,
   ElementRef,
   forwardRef,
   inject,
@@ -23,6 +24,7 @@ import {
   type TemplateRef,
   viewChild,
   ViewContainerRef,
+  linkedSignal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -110,7 +112,7 @@ const COMPACT_MODE_WIDTH_THRESHOLD = 100;
     '(keydown.{enter,space,arrowdown,arrowup,escape}.prevent)': 'onTriggerKeydown($event)',
   },
 })
-export class ZardSelectComponent implements ControlValueAccessor, AfterContentInit, OnDestroy {
+export class ZardSelectComponent implements ControlValueAccessor, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly injector = inject(Injector);
@@ -141,6 +143,27 @@ export class ZardSelectComponent implements ControlValueAccessor, AfterContentIn
   protected readonly isFocus = signal(false);
   protected readonly isCompact = signal(false);
 
+  constructor() {
+    effect(() => {
+      const items = this.selectItems();
+      const hostWidth = this.elementRef.nativeElement.offsetWidth || 0;
+
+      items.forEach((item, i) => {
+        item.setSelectHost({
+          selectedValue: () => (this.zMultiple() ? (this.zValue() as string[]) : [this.zValue() as string]),
+          selectItem: (value: string, label: string) => this.selectItem(value, label),
+          navigateTo: () => this.navigateTo(item, i),
+        });
+        item.zSize.set(this.zSize());
+
+        if (hostWidth > 0 && hostWidth <= COMPACT_MODE_WIDTH_THRESHOLD) {
+          this.isCompact.set(true);
+          item.zMode.set('compact');
+        }
+      });
+    });
+  }
+
   protected onFocus(): void {
     if (this.isCompact()) {
       this.isFocus.set(true);
@@ -157,7 +180,7 @@ export class ZardSelectComponent implements ControlValueAccessor, AfterContentIn
     return this.provideLabelForSingleSelectMode(selectedValue as string);
   });
 
-  private onChange: OnChangeType = (_value: string) => {
+  private onChange: (value: any) => void = (_value: any) => {
     // ControlValueAccessor onChange callback
   };
 
@@ -175,25 +198,6 @@ export class ZardSelectComponent implements ControlValueAccessor, AfterContentIn
     ),
   );
 
-  ngAfterContentInit() {
-    const hostWidth = this.elementRef.nativeElement.offsetWidth || 0;
-    // Setup select host reference for each item
-    let i = 0;
-    for (const item of this.selectItems()) {
-      item.setSelectHost({
-        selectedValue: () => (this.zMultiple() ? (this.zValue() as string[]) : [this.zValue() as string]),
-        selectItem: (value: string, label: string) => this.selectItem(value, label),
-        navigateTo: () => this.navigateTo(item, i),
-      });
-      item.zSize.set(this.zSize());
-      i++;
-
-      if (hostWidth <= COMPACT_MODE_WIDTH_THRESHOLD) {
-        this.isCompact.set(true);
-        item.zMode.set('compact');
-      }
-    }
-  }
 
   ngOnDestroy() {
     this.destroyOverlay();
@@ -271,8 +275,11 @@ export class ZardSelectComponent implements ControlValueAccessor, AfterContentIn
 
       return value;
     });
-    this.onChange(value);
-    this.zSelectionChange.emit(this.zValue());
+
+    // Ensure we emit the CURRENT value of the signal
+    const updatedValue = this.zValue();
+    this.onChange(updatedValue);
+    this.zSelectionChange.emit(updatedValue);
 
     if (this.zMultiple()) {
       // in multiple mode it can happen that button changes size because of selection badges,
@@ -325,7 +332,9 @@ export class ZardSelectComponent implements ControlValueAccessor, AfterContentIn
 
     const matchingItem = this.getMatchingItem(selectedValue);
     if (matchingItem) {
-      return [matchingItem.label()];
+      const label = matchingItem.label();
+      // If the label was captured, use it; otherwise fall back to the value itself
+      return [label || selectedValue];
     }
 
     return selectedValue ? [selectedValue] : [];

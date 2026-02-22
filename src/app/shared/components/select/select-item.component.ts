@@ -6,6 +6,7 @@ import {
   inject,
   input,
   linkedSignal,
+  AfterContentInit,
   signal,
 } from '@angular/core';
 
@@ -52,20 +53,33 @@ interface SelectHost {
     '(keydown.{tab}.prevent)': 'noopFn',
   },
 })
-export class ZardSelectItemComponent {
+export class ZardSelectItemComponent implements AfterContentInit {
   readonly elementRef = inject(ElementRef<HTMLElement>);
 
   readonly zValue = input.required<string>();
   readonly zDisabled = input(false, { transform });
   readonly class = input<string>('');
 
+  readonly label = signal<string>('');
+
+  ngAfterContentInit() {
+    this.updateLabel();
+  }
+
+  updateLabel() {
+    // Small delay to ensure text is rendered (especially for @for loops)
+    setTimeout(() => {
+      const element = this.elementRef.nativeElement;
+      const contentPart = element.querySelector('.truncate');
+      const text = (contentPart?.textContent ?? element.textContent ?? '').trim();
+      // Use the captured text, or fall back to the zValue itself
+      this.label.set(text || this.zValue());
+    }, 0);
+  }
+  
+
   private readonly select = signal<SelectHost | null>(null);
   noopFn = noopFn;
-
-  readonly label = linkedSignal<string>(() => {
-    const element = this.elementRef.nativeElement;
-    return (element.textContent ?? element.innerText)?.trim() ?? '';
-  });
 
   readonly zMode = signal<ZardSelectItemModeVariants>('normal');
   readonly zSize = signal<ZardSelectSizeVariants>('default');

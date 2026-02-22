@@ -6,20 +6,23 @@ import { computed, Injectable, signal } from '@angular/core';
   providedIn: 'root',
 })
 export class TodoService {
+  filter(category: string) {
+    throw new Error('Method not implemented.');
+  }
   todos = signal<Todo[]>([]);//for the  Future, load the todos form the localstorage or from the backend
-  total = computed(()=>(this.todos().length));
+  total = computed(() => (this.todos().length));
   add(payload: Partial<Todo>) {
-    const {title, description} = payload;
-    const newTodo:Todo = {
+    const { title, description } = payload;
+    const newTodo: Todo = {
+      priority: 'low',
+      category: 'work',
       ...payload,
       id: this.generateId(),
-      title:title ||'',
+      title: title || '',
       description,
       completed: false,
       createdAt: new Date().toISOString(),
       order: 1,
-      priority:'low',
-      category:'work'
     }
     //make update to the signal
     this.todos.update(prevTodos => [...prevTodos, newTodo]);
@@ -36,7 +39,24 @@ export class TodoService {
     byteArray[6] = (byteArray[6] & 0x0f) | 0x40;
     byteArray[8] = (byteArray[8] & 0x3f) | 0x80;
     const hex = Array.from(byteArray).map(b => b.toString(16).padStart(2, '0')).join('');
-    return `${hex.substring(0,8)}-${hex.substring(8,12)}-${hex.substring(12,16)}-${hex.substring(16,20)}-${hex.substring(20)}`;
+    return `${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}`;
   }
-    // ...existing code...
+  // ...existing code...
+  getById(id: string): Todo | undefined {
+    return this.todos().find(todo => todo.id === id);
+  }
+  remove(id: string): void {
+    this.todos.update((todos) => todos.filter(todo => todo.id !== id));
+  }
+  toggleCompletion(id: string): void {
+    this.todos.update((todos) =>
+      todos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo)
+    );
+  }
+
+  update(id: string, payload: Partial<Todo>): void {
+    this.todos.update((todos) =>
+      todos.map(todo => todo.id === id ? { ...todo, ...payload, id, createdAt: todo.createdAt } : todo)
+    );
+  }
 }

@@ -1,78 +1,136 @@
-<!-- Form -->
-<form [formGroup]="todoForm"
-class="bg-[--color-surface] p-8 rounded-xl shadow-sm border-[--color-border]" (ngSubmit)="onSubmit()">
-
-    <!-- Title -->
-    <div class="space-y-2">
-        <label for="title" class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Title
-        </label>
-        <input z-input id="title" type="text" placeholder="E.g., Complete project proposal"
-            class="w-full rounded-xl border-gray-300 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            formControlName="title" />
-        @if (todoForm.get('title')?.touched && todoForm.get('title')?.errors?.['required']) {
-        <p class="text-xs text-red-500 mt-1">Title is required</p>
-        }
+<div class="max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <!-- Header Section -->
+    <div class="mb-8 text-center md:text-left">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight mb-2">
+            {{ isEdit() ? 'Edit Task' : 'Create New Task' }}
+        </h1>
+        <p class="text-muted-foreground text-sm md:text-base font-medium">
+            {{ isEdit() ? 'Update the details of your task.' : 'Fill in the details below to organize your day.' }}
+        </p>
     </div>
 
-    <!-- Description -->
-    <div class="space-y-2">
-        <label for="description" class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Description (Optional)
-        </label>
-        <textarea z-input id="description" placeholder="Add more details..."
-            class="w-full min-h-[120px] py-3 rounded-xl border-gray-300 dark:border-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            formControlName="description"></textarea>
-    </div>
+    <!-- Form Card -->
+    <form [formGroup]="todoForm" (ngSubmit)="onSubmit()"
+        class="bg-card/70 backdrop-blur-xl border border-border/50 p-6 md:p-10 rounded-3xl shadow-2xl flex flex-col gap-8 transition-all duration-300">
 
-    <!-- Category -->
-    <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Category
-        </label>
-        <z-select formControlName="category" zPlaceholder="Select category" class="w-full rounded-xl">
-            @for (cat of categories(); track cat) {
-            <z-select-item [zValue]="cat">
-                <z-icon [zType]="getIcon(cat)" zSize="sm" class="mr-2"></z-icon>
-                {{ cat | titlecase }}
-            </z-select-item>
+        <!-- Title Section -->
+        <div class="flex flex-col gap-3 group">
+            <label for="title"
+                class="flex items-center gap-2 text-sm font-bold text-foreground/80 transition-colors group-focus-within:text-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Task Title
+            </label>
+            <input z-input id="title" type="text" placeholder="What needs to be done?"
+                class="text-lg font-semibold bg-background/40 border-transparent focus:bg-background/80 transition-all rounded-2xl p-4"
+                [class.border-destructive/50]="todoForm.get('title')?.invalid && todoForm.get('title')?.touched"
+                formControlName="title" />
+
+            @if (todoForm.get('title')?.invalid && todoForm.get('title')?.touched) {
+            <div class="flex flex-col gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                @if (todoForm.get('title')?.errors?.['required']) {
+                <p class="text-xs font-bold text-destructive flex items-center gap-1">
+                    <span class="w-1 h-1 rounded-full bg-current"></span>
+                    Title is required
+                </p>
+                }
+                @if (todoForm.get('title')?.errors?.['minlength']) {
+                <p class="text-xs font-bold text-destructive flex items-center gap-1">
+                    <span class="w-1 h-1 rounded-full bg-current"></span>
+                    Title must be at least 3 characters
+                </p>
+                }
+                @if (todoForm.get('title')?.errors?.['maxlength']) {
+                <p class="text-xs font-bold text-destructive flex items-center gap-1">
+                    <span class="w-1 h-1 rounded-full bg-current"></span>
+                    Title is too long (Max 100)
+                </p>
+                }
+            </div>
             }
-        </z-select>
-        @if (todoForm.get('category')?.touched && todoForm.get('category')?.errors?.['required']) {
-        <p class="text-xs text-red-500 mt-1">Category is required</p>
-        }
-    </div>
+        </div>
 
-    <!-- Priority -->
-    <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Priority
-        </label>
-        <z-select formControlName="priority" zPlaceholder="Select priority" class="w-full rounded-xl">
-            @for (pri of priorities(); track pri) {
-            <z-select-item [zValue]="pri" class="w-full rounded-xl">
-                <z-icon [zType]="getIcon(pri)" zSize="sm" class="mr-2"></z-icon>
-                {{ pri | titlecase }}
-            </z-select-item>
-            }
-        </z-select>
-        @if (todoForm.get('priority')?.touched && todoForm.get('priority')?.errors?.['required']) {
-        <p class="text-xs text-red-500 mt-1">Priority is required</p>
-        }
-    </div>
+        <!-- Description Section -->
+        <div class="flex flex-col gap-3 group">
+            <label for="description"
+                class="flex items-center gap-2 text-sm font-bold text-foreground/80 transition-colors group-focus-within:text-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                Detailed Description
+            </label>
+            <textarea z-input id="description" placeholder="Add more context or subtasks..."
+                class="w-full min-h-[140px] text-base bg-background/40 border-transparent focus:bg-background/80 transition-all rounded-2xl p-4 resize-none"
+                formControlName="description"></textarea>
+        </div>
 
-    <!-- Actions -->
-    <div class="flex items-center gap-4 pt-6">
+        <!-- Meta Grid (Category & Priority) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Category -->
+            <div class="flex flex-col gap-3 group">
+                <label
+                    class="flex items-center gap-2 text-sm font-bold text-foreground/80 transition-colors group-focus-within:text-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M7 7h.01M7 11h.01M7 15h.01M13 7h.01M13 11h.01M13 15h.01M17 7h.01M17 11h.01M17 15h.01" />
+                    </svg>
+                    Category
+                </label>
+                <z-select formControlName="category" zPlaceholder="Choose category"
+                    class="rounded-2xl bg-background/40">
+                    @for (cat of categories(); track cat) {
+                    <z-select-item [zValue]="cat">
+                        <div class="flex items-center gap-2 px-1">
+                            <z-icon [zType]="getIcon(cat)" zSize="sm" class="opacity-70"></z-icon>
+                            <span class="font-medium capitalize">{{ cat }}</span>
+                        </div>
+                    </z-select-item>
+                    }
+                </z-select>
+            </div>
 
-        <button z-button class="flex-1 rounded-xl py-3 font-semibold shadow-md hover:shadow-lg transition"
-            (click)="saveTodo()" [disabled]="todoForm.invalid && todoForm.touched">
-            Create Todo
-        </button>
+            <!-- Priority -->
+            <div class="flex flex-col gap-3 group">
+                <label
+                    class="flex items-center gap-2 text-sm font-bold text-foreground/80 transition-colors group-focus-within:text-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Priority
+                </label>
+                <z-select formControlName="priority" zPlaceholder="Set priority" class="rounded-2xl bg-background/40">
+                    @for (pri of priorities(); track pri) {
+                    <z-select-item [zValue]="pri">
+                        <div class="flex items-center gap-2 px-1">
+                            <z-icon [zType]="getIcon(pri)" zSize="sm" class="opacity-70"
+                                [class.text-red-500]="pri === 'high'" [class.text-amber-500]="pri === 'medium'"
+                                [class.text-indigo-500]="pri === 'low'"></z-icon>
+                            <span class="font-medium capitalize">{{ pri }}</span>
+                        </div>
+                    </z-select-item>
+                    }
+                </z-select>
+            </div>
+        </div>
 
-        <button z-button zType="outline" class="flex-1 rounded-xl py-3 font-semibold transition" (click)="goBack()">
-            Cancel
-        </button>
+        <!-- Actions -->
+        <div class="flex flex-col md:flex-row items-center gap-4 pt-4">
+            <button z-button type="submit"
+                class="w-full md:flex-1 h-14 rounded-2xl text-base font-bold shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+                [disabled]="todoForm.invalid">
+                <z-icon [zType]="isEdit() ? 'save' : 'plus'" zSize="sm" class="mr-2 opacity-70"></z-icon>
+                {{ isEdit() ? 'Save Changes' : 'Create Task' }}
+            </button>
 
-    </div>
-
-</form>
+            <button z-button zType="outline" type="button"
+                class="w-full md:w-32 h-14 rounded-2xl text-base font-bold bg-background/20 backdrop-blur-sm border-border/40 hover:bg-background/40 transition-all duration-200"
+                (click)="goBack()">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>
